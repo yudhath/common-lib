@@ -18,15 +18,20 @@ import (
 )
 
 var bucketName string
+var appEnv string
 
-func SetBucketName(name string) {
-	bucketName = name
+func SetBucketName(value string) {
+	bucketName = value
+}
+
+func SetAppEnv(value string) {
+	appEnv = value
 }
 
 func IsEnabled(s3Client *s3.Client, featureName string) bool {
 	err := checkBucketName()
 	if err != nil {
-		log.Info("Error due to ", err)
+		log.Info("Error when invoke IsEnabled() method for featureName ", featureName, " due to ", err)
 		return false
 	}
 
@@ -41,8 +46,7 @@ func IsEnabled(s3Client *s3.Client, featureName string) bool {
 }
 
 func UpsertFeatureToggleConfig(s3Client *s3.Client, featureToggleConfig *FeatureToggleConfig) (bool, error) {
-	env := os.Getenv("APP_ENV")
-	prefix := strings.ToLower(env) + "/"
+	prefix := strings.ToLower(appEnv) + "/"
 
 	err := checkBucketName()
 	if err != nil {
@@ -63,7 +67,7 @@ func UpsertFeatureToggleConfig(s3Client *s3.Client, featureToggleConfig *Feature
 
 	json, err := json.Marshal(featureToggleConfig)
 	if err != nil {
-		log.Error("Failed when try to marshal config due to ", err)
+		log.Error("Failed when try to marshal feature toggle config due to ", err)
 		return false, err
 	}
 
@@ -75,18 +79,20 @@ func UpsertFeatureToggleConfig(s3Client *s3.Client, featureToggleConfig *Feature
 
 	resp, err := s3Client.PutObject(context.TODO(), input)
 	if err != nil {
-		log.Error("Failed when upload json due to ", err)
+		log.Error("Failed when upload feature toggle config due to ", err)
 		return false, nil
 	}
 
-	log.Info("Upsert feature toggle was success with response from AWS : ", resp)
+	log.Info("Upsert feature toggle config was success with response from AWS : ", resp)
 	return true, err
 }
 
 func getFeatureToggleConfig(s3Client *s3.Client, featureName string) (*FeatureToggleConfig, error) {
+	prefix := strings.ToLower(appEnv) + "/"
+
 	requestInput := &s3.GetObjectInput{
 		Bucket: aws.String(bucketName),
-		Key:    aws.String(featureName + ".json"),
+		Key:    aws.String(prefix + featureName + ".json"),
 	}
 
 	result, err := s3Client.GetObject(context.TODO(), requestInput)
