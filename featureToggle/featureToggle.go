@@ -37,7 +37,6 @@ func IsEnabled(s3Client *s3.Client, featureName string) bool {
 
 	featureToggleConfig, err := getFeatureToggleConfig(s3Client, featureName)
 	if err != nil {
-		log.Error("Failed when get feature toggle due to ", err)
 		return false
 	}
 	
@@ -53,7 +52,7 @@ func UpsertFeatureToggleConfig(s3Client *s3.Client, featureToggleConfig *Feature
 		return false, err
 	}
 
-	if featureToggleConfig != nil || featureToggleConfig == (&FeatureToggleConfig{}) {
+	if featureToggleConfig == nil || featureToggleConfig == (&FeatureToggleConfig{}) {
 		return false, errors.New("feature toggle struct must not empty/nil")
 	}
 
