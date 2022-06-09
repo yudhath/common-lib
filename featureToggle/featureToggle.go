@@ -24,20 +24,21 @@ func SetBucketName(name string) {
 	bucketName = name
 }
 
-func IsEnabled(s3Client *s3.Client, featureName string) (bool, error) {
+func IsEnabled(s3Client *s3.Client, featureName string) bool {
 	err := checkBucketName()
 	if err != nil {
-		return false, err
+		log.Info("Error while checking bucket name due to ", err)
+		return false
 	}
 
 	featureToggleConfig, err := getFeatureToggleConfig(s3Client, featureName)
 	if err != nil {
 		log.Error("Failed when get feature toggle due to ", err)
-		return false, err
+		return false
 	}
 	
 	isEnabled := featureToggleConfig != (&FeatureToggleConfig{}) && featureToggleConfig.IsEnabled && isEnabledPartially(featureToggleConfig.Percentage)
-	return isEnabled, nil
+	return isEnabled
 }
 
 func UpsertFeatureToggleConfig(s3Client *s3.Client, featureToggleConfig *FeatureToggleConfig) (bool, error) {
