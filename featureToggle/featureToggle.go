@@ -108,7 +108,7 @@ func getFeatureToggleConfig(s3Client *s3.Client, featureName string) (*FeatureTo
 		}
 
 		bodyString := string(body)
-		err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&featureToggleConfig)
+		err = json.NewDecoder(strings.NewReader(bodyString)).Decode(&featureToggleConfig)
 		if err != nil {
 			log.Error("Failed when decode json to struct due to ", err)
 		}
