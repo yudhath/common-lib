@@ -27,7 +27,7 @@ func SetBucketName(name string) {
 func IsEnabled(s3Client *s3.Client, featureName string) bool {
 	err := checkBucketName()
 	if err != nil {
-		log.Info("Error while checking bucket name due to ", err)
+		log.Info("Error due to ", err)
 		return false
 	}
 
@@ -92,7 +92,7 @@ func getFeatureToggleConfig(s3Client *s3.Client, featureName string) (*FeatureTo
 
 	result, err := s3Client.GetObject(context.TODO(), requestInput)
 	if err != nil {
-		log.Error("ERROR ", err)
+		log.Error("Error when try to get object from s3 due to ", err)
 	}
 	defer func() {
 		if result != nil {
@@ -102,19 +102,16 @@ func getFeatureToggleConfig(s3Client *s3.Client, featureName string) (*FeatureTo
 
 	var featureToggleConfig FeatureToggleConfig
 	if result != nil {
-		body1, err := ioutil.ReadAll(result.Body)
+		body, err := ioutil.ReadAll(result.Body)
 		if err != nil {
-			log.Error(err)
+			log.Error("Error while read result body from s3 due to ", err)
 		}
-		bodyString1 := fmt.Sprintf("%s", body1)
-		log.Info("Json String : " + bodyString1)
-		decoder := json.NewDecoder(strings.NewReader(bodyString1))
-		err = decoder.Decode(&featureToggleConfig)
+
+		bodyString := string(body)
+		err := json.NewDecoder(strings.NewReader(bodyString)).Decode(&featureToggleConfig)
 		if err != nil {
 			log.Error("Failed when decode json to struct due to ", err)
 		}
-
-		log.Info("Here is the feature toggle struct : ", featureToggleConfig)
 	}
 	return &featureToggleConfig, err
 }
@@ -143,7 +140,7 @@ func GetJsonFromS3(s3Client *s3.Client, T interface{}, key string) error {
 
 func checkBucketName() error {
 	if bucketName == "" {
-		return errors.New("bucket name was empty, you must set s3 bucketname using SetBucketName() method before you any method from this package")
+		return errors.New("bucket name was empty, you must set s3 bucketname using SetBucketName() method before you use any method from this package")
 	}
 
 	return nil
